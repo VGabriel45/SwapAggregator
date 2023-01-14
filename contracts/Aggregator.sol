@@ -25,23 +25,6 @@ interface IPancakeRouter01 {
     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
-contract TestMultiCall {
-    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts){}
-
-    function encodingFunctionSignature()
-	    public
-        view
-	    returns(bytes memory)
-    {
-        uint amountIn = 1000000;
-        address[] memory path = new address[](2);
-        path[0] = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
-        path[1] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
-        return abi.encodeWithSelector(IPancakeRouter01.getAmountsOut.selector, amountIn, path);
-    }
-}
-
-
 contract Aggregator {
 
     uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
