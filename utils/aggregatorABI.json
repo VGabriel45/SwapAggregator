@@ -44,13 +44,8 @@
 						"type": "address"
 					},
 					{
-						"internalType": "address",
-						"name": "tokenIn",
-						"type": "address"
-					},
-					{
 						"internalType": "uint256",
-						"name": "amountIn",
+						"name": "etherAmount",
 						"type": "uint256"
 					},
 					{
@@ -59,7 +54,7 @@
 						"type": "bytes"
 					}
 				],
-				"internalType": "struct Aggregator.Call[]",
+				"internalType": "struct Aggregator.CallETH[]",
 				"name": "callData",
 				"type": "tuple[]"
 			}
@@ -68,25 +63,6 @@
 		"outputs": [],
 		"stateMutability": "payable",
 		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "optimalAmm",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "bestReturn",
-				"type": "uint256"
-			}
-		],
-		"name": "OptimalResult",
-		"type": "event"
 	},
 	{
 		"inputs": [

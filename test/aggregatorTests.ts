@@ -20,6 +20,7 @@ describe("Aggregator testing", function () {
     let babyswapRouterAddr = "0x325E343f1dE602396E256B67eFd1F61C3A6B38Bd"
     let cakeTokenAddr = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
     let bananaTokenAddr = "0x603c7f932ED1fc6575303D8Fb018fDCBb0f39a95";
+    let busdAddr = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
     let wbnbTokenAddr = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
     let aggregator: Contract;
     let owner: Signer;
@@ -50,10 +51,10 @@ describe("Aggregator testing", function () {
          );
     })
 
-    it('CAKE balance should decrease after 2 aggregated swaps', async () => {
+    it('should execute 2 aggregated swaps, tokens for ETH and update caller balances', async () => {
         const callerAddr = await owner.getAddress();
 
-        // construct call data
+        // construct call data,
         const callData = [{
             target: pancakeRouterAddr,
             tokenIn: cakeTokenAddr,
@@ -85,7 +86,7 @@ describe("Aggregator testing", function () {
         expect(balanceAfter).to.be.lessThan(balanceBefore);
     });
 
-    it('CAKE balance should decrease after 3 aggregated swaps', async () => {
+    it('should execute 3 aggregated swaps, tokens for ETH and update caller balances', async () => {
         const callerAddr = await owner.getAddress();
 
         // construct call data
@@ -98,14 +99,14 @@ describe("Aggregator testing", function () {
           {
             target: apeswapRouterAddr,
             tokenIn: cakeTokenAddr,
-            amountIn: ethers.utils.parseEther("1"),
-            data: routerIFace.encodeFunctionData("swapExactTokensForETH", [ethers.utils.parseEther("1"), 0, [cakeTokenAddr, wbnbTokenAddr], callerAddr, 99999999999999])
+            amountIn: ethers.utils.parseEther("5"),
+            data: routerIFace.encodeFunctionData("swapExactTokensForETH", [ethers.utils.parseEther("5"), 0, [cakeTokenAddr, wbnbTokenAddr], callerAddr, 99999999999999])
           },
           {
             target: babyswapRouterAddr,
             tokenIn: cakeTokenAddr,
-            amountIn: ethers.utils.parseEther("1"),
-            data: routerIFace.encodeFunctionData("swapExactTokensForETH", [ethers.utils.parseEther("1"), 0, [cakeTokenAddr, wbnbTokenAddr], callerAddr, 99999999999999])
+            amountIn: ethers.utils.parseEther("2"),
+            data: routerIFace.encodeFunctionData("swapExactTokensForETH", [ethers.utils.parseEther("2"), 0, [cakeTokenAddr, wbnbTokenAddr], callerAddr, 99999999999999])
           }]
           
         // approve tokens to be spent
@@ -182,5 +183,76 @@ describe("Aggregator testing", function () {
         await expect(aggregator.connect(owner).execute(callData)).to.be.revertedWith('BEP20: transfer amount exceeds allowance');
         
     });
+
+    it('should execute 2 aggregated swaps, ETH for tokens and update caller balances', async () => {
+      const callerAddr = await owner.getAddress();
+
+      // construct call data
+      const callData = [{
+          target: pancakeRouterAddr,
+          etherAmount: ethers.utils.parseEther("1"),
+          data: routerIFace.encodeFunctionData("swapExactETHForTokens", [0, [wbnbTokenAddr, cakeTokenAddr], callerAddr, 999999999999999])
+        },
+        {
+          target: apeswapRouterAddr,
+          etherAmount: ethers.utils.parseEther("1"),
+          data: routerIFace.encodeFunctionData("swapExactETHForTokens", [0, [wbnbTokenAddr, busdAddr], callerAddr, 999999999999999])
+        }]
+
+      const token = new ethers.Contract(cakeTokenAddr, erc20ABI, owner);
+        
+      // check balance before of token spent
+      const balanceBefore = await token.connect(owner).balanceOf(callerAddr);
+      console.log(balanceBefore);
+        
+      // execute multicall tx
+      const tx = await aggregator.connect(owner).executeETH(callData, {value: ethers.utils.parseEther("2")});
+
+      // check balance after tx
+      const balanceAfter = await token.connect(owner).balanceOf(callerAddr);
+      console.log(balanceAfter);
+      
+      expect(balanceAfter).to.be.greaterThan(balanceBefore);
+  });
+
+  it('should execute 2 aggregated swaps, tokens for tokens and update caller balances', async () => {
+    const callerAddr = await owner.getAddress();
+
+    // construct call data
+    const callData = [{
+            target: pancakeRouterAddr,
+            tokenIn: cakeTokenAddr,
+            amountIn: ethers.utils.parseEther("10"),
+            data: routerIFace.encodeFunctionData("swapExactTokensForTokens", [ethers.utils.parseEther("10"), 0, [cakeTokenAddr, busdAddr], callerAddr, 99999999999999])
+        },
+        {
+            target: babyswapRouterAddr,
+            tokenIn: cakeTokenAddr,
+            amountIn: ethers.utils.parseEther("10"),
+            data: routerIFace.encodeFunctionData("swapExactTokensForTokens", [ethers.utils.parseEther("10"), 0, [cakeTokenAddr, busdAddr], callerAddr, 99999999999999])
+        }]
+    const cakeToken = new ethers.Contract(cakeTokenAddr, erc20ABI, owner);
+    const busdToken = new ethers.Contract(busdAddr, erc20ABI, owner);
+
+    await cakeToken.connect(owner).approve(aggregator.address, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+      
+    // check balance before of token spent
+    const cakeBalanceBefore = await cakeToken.connect(owner).balanceOf(callerAddr);
+    console.log(`Cake before: ${cakeBalanceBefore}`);
+    const busdBalanceBefore = await busdToken.connect(owner).balanceOf(callerAddr);
+    console.log(`Busd before: ${busdBalanceBefore}`);
+      
+    // execute multicall tx
+    const tx = await aggregator.connect(owner).execute(callData);
+
+    // check balance after tx
+    const cakeBalanceAfter = await cakeToken.connect(owner).balanceOf(callerAddr);
+    console.log(`Cake after: ${cakeBalanceAfter}`);
+    const busdBalanceAfter = await busdToken.connect(owner).balanceOf(callerAddr);
+    console.log(`Busd after: ${busdBalanceAfter}`);
+
+    expect(cakeBalanceAfter).to.be.lessThan(cakeBalanceBefore);
+    expect(busdBalanceAfter).to.be.greaterThan(busdBalanceBefore);
+});
 
 })

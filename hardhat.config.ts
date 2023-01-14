@@ -2,26 +2,21 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.17",
+  solidity:{
+    version:  "0.8.17",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    }
+  },
   networks: {
     localhost: {
-      url: "http://localhost:8545",
+      url: "http://127.0.0.1:8545/",
       chainId: 31337
-    },
-      hardhat: {
-        forking: {
-          url: "https://rpc.ankr.com/bsc",
-        }
     }
   }
 };
-
-/**
- * 
- * {
- * contractAddress: router address
- * method: "swapExactTokensForETH(amountIn, amountOutMin, path, to, deadline)" --> encode this method --> send encoded to smart contract
- * }
- */
 
 export default config;
