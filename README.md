@@ -3,7 +3,7 @@
 Only use BSC forked mainnet.
 
 1. run npm or pnpm install
-2. open a new terminal and run "npx hardhat node --fork https://rpc.ankr.com/bscc"
+2. open a new terminal and run "npx hardhat node --fork https://rpc.ankr.com/bsc"
 3. open a new terminal and from the root folder of the project run nodemon api/app.js
 4. deploy the Aggregator contract by running "npx hardhat run scripts/deploy.ts --network localhost" and replace the address in your .env file
 5. replace the wallet private key in your .env file
